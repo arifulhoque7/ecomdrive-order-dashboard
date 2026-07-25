@@ -1,0 +1,86 @@
+<?php
+
+use App\Enums\OrderStatus;
+use App\Models\Customer;
+use App\Models\Order;
+use App\Models\User;
+use Inertia\Testing\AssertableInertia;
+
+beforeEach(function () {
+    $this->actingAs(User::factory()->create());
+});
+
+test('guests cannot browse the order book', function () {
+    auth()->logout();
+
+    $this->get(route('orders.index'))->assertRedirect(route('login'));
+});
+
+test('search matches an order number or the customer behind it', function () {
+    $wanted = Order::factory()
+        ->for(Customer::factory()->create(['name' => 'Marguerite Doyle']))
+        ->create(['order_number' => 'ORD-WANTED']);
+
+    Order::factory()->create(['order_number' => 'ORD-OTHER']);
+
+    $this->get(route('orders.index', ['q' => 'ORD-WANTED']))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('orders/index')
+            ->has('orders.data', 1)
+            ->where('orders.data.0.id', $wanted->id)
+        );
+
+    $this->get(route('orders.index', ['q' => 'Marguerite']))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('orders.data', 1)
+            ->where('orders.data.0.order_number', 'ORD-WANTED')
+        );
+});
+
+test('the status tab narrows the list and the counts stay filter aware', function () {
+    Order::factory()->count(3)->pending()->create();
+    Order::factory()->count(2)->delivered()->create();
+
+    $this->get(route('orders.index', ['status' => 'pending']))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('orders.data', 3)
+            ->where('statusCounts.pending', 3)
+            ->where('statusCounts.delivered', 2)
+            ->where('statusCounts.all', 5)
+        );
+});
+
+test('the date range only returns orders placed inside it', function () {
+    Order::factory()->create(['placed_at' => now()->subDays(40)]);
+    $recent = Order::factory()->create(['placed_at' => now()->subDay()]);
+
+    $this->get(route('orders.index', [
+        'date_from' => now()->subWeek()->toDateString(),
+        'date_to' => now()->toDateString(),
+    ]))->assertInertia(fn (AssertableInertia $page) => $page
+        ->has('orders.data', 1)
+        ->where('orders.data.0.id', $recent->id)
+    );
+});
+
+test('an end date before the start date is rejected', function () {
+    $this->get(route('orders.index', [
+        'date_from' => now()->toDateString(),
+        'date_to' => now()->subWeek()->toDateString(),
+    ]))->assertSessionHasErrors('date_to');
+});
+
+test('the summary cards describe the filtered set and exclude lost revenue', function () {
+    Order::factory()->count(2)->delivered()->create();
+    Order::factory()->status(OrderStatus::Cancelled)->create();
+
+    $delivered = Order::query()->where('status', OrderStatus::Delivered)->get();
+
+    $this->get(route('orders.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('summary.orders_count', 3)
+            ->where('summary.revenue_cents', (int) $delivered->sum('total_cents'))
+            ->where('summary.avg_order_value_cents', (int) round($delivered->sum('total_cents') / 2))
+            ->where('summary.open_orders', 0)
+        );
+});

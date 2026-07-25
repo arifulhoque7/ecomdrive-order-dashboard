@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/Users/arifulhoque/Library/Application Support/Herd/bin/php85",
+            "args": [
+                "/Users/arifulhoque/pp/ecomdrive-assessment/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}
