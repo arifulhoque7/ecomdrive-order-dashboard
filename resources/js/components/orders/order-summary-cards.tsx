@@ -40,7 +40,7 @@ export function OrderSummaryCards({ summary }: { summary: OrderSummary }) {
                 icon={ShoppingBag}
                 label="Total orders"
                 value={summary.orders_count.toLocaleString()}
-                meta="Matching current filters"
+                meta="Across search and date filters"
             />
             <SummaryCard
                 icon={CircleDollarSign}

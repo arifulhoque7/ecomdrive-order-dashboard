@@ -70,6 +70,29 @@ test('an end date before the start date is rejected', function () {
     ]))->assertSessionHasErrors('date_to');
 });
 
+test('the summary cards hold still when the status tab changes', function () {
+    Order::factory()->count(3)->pending()->create();
+    Order::factory()->count(2)->delivered()->create();
+
+    $all = $this->get(route('orders.index'))->viewData('page')['props']['summary'];
+
+    $this->get(route('orders.index', ['status' => 'pending']))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('orders.data', 3)
+            ->where('summary.orders_count', $all['orders_count'])
+            ->where('summary.revenue_cents', $all['revenue_cents'])
+            ->where('summary.open_orders', $all['open_orders'])
+        );
+});
+
+test('the summary cards still follow the search and date filters', function () {
+    Order::factory()->create(['placed_at' => now()->subDays(40)]);
+    Order::factory()->count(2)->create(['placed_at' => now()->subDay()]);
+
+    $this->get(route('orders.index', ['date_from' => now()->subWeek()->toDateString()]))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('summary.orders_count', 2));
+});
+
 test('the summary cards describe the filtered set and exclude lost revenue', function () {
     Order::factory()->count(2)->delivered()->create();
     Order::factory()->status(OrderStatus::Cancelled)->create();

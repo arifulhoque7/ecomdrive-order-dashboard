@@ -124,16 +124,16 @@ class OrderController extends Controller
     }
 
     /**
-     * Headline metrics for the filtered order book. Cancelled and refunded
-     * orders never count as revenue, so they are excluded from both the money
-     * figures and the average they feed.
+     * Headline metrics for the order book. Like the tab counts, these ignore the
+     * status tab itself — switching tabs re-scopes the table, not the totals the
+     * operator is measuring against. Cancelled and refunded orders never count as
+     * revenue, so they are excluded from the money figures and the average.
      *
      * @return array<string, int>
      */
     protected function summary(OrderIndexRequest $request): array
     {
-        $status = $request->enum('status', OrderStatus::class);
-        $scoped = fn (): Builder => $this->filtered($request)->withStatus($status);
+        $scoped = fn (): Builder => $this->filtered($request);
         $earning = fn (): Builder => $scoped()->whereNotIn('status', [OrderStatus::Cancelled, OrderStatus::Refunded]);
 
         $revenueCents = (int) $earning()->sum('total_cents');
@@ -161,7 +161,8 @@ class OrderController extends Controller
 
         return Collection::make(OrderStatus::cases())
             ->keyBy('value')
-            ->map(fn (OrderStatus $status, string $key) => (int) $counts->get($key, 0))
+            ->keys()
+            ->mapWithKeys(fn (string $status) => [$status => (int) $counts->get($status, 0)])
             ->put('all', (int) $counts->sum())
             ->all();
     }
