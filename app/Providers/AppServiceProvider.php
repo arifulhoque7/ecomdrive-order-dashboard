@@ -2,12 +2,9 @@
 
 namespace App\Providers;
 
-use App\Services\Ai\ClaudeProvider;
-use App\Services\Ai\GeminiProvider;
 use App\Services\Ai\InsightProvider;
-use App\Services\Ai\OpenAiProvider;
+use App\Services\Ai\ProviderFactory;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -20,24 +17,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(InsightProvider::class, fn (): InsightProvider => match (Config::string('services.ai.provider')) {
-            'openai' => new OpenAiProvider(
-                Config::string('services.openai.key', ''),
-                Config::string('services.openai.model'),
-                Config::string('services.openai.base_url'),
-            ),
-            'gemini' => new GeminiProvider(
-                Config::string('services.gemini.key', ''),
-                Config::string('services.gemini.model'),
-                Config::string('services.gemini.base_url'),
-            ),
-            default => new ClaudeProvider(
-                Config::string('services.anthropic.key', ''),
-                Config::string('services.anthropic.model'),
-                Config::string('services.anthropic.base_url'),
-                Config::string('services.anthropic.version'),
-            ),
-        });
+        $this->app->bind(InsightProvider::class, fn (): InsightProvider => $this->app->make(ProviderFactory::class)->active());
     }
 
     /**

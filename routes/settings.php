@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Settings\AiModelsController;
+use App\Http\Controllers\Settings\AiSettingsController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
@@ -24,6 +26,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user-password.update');
 
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
+
+    Route::get('settings/ai', [AiSettingsController::class, 'edit'])->name('ai.edit');
+    Route::put('settings/ai', [AiSettingsController::class, 'update'])->name('ai.update');
+    Route::post('settings/ai/models', AiModelsController::class)->name('ai.models');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

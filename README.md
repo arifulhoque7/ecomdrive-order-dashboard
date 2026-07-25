@@ -14,7 +14,7 @@ Built with Laravel 13, Inertia v3, React 19 and MySQL.
 | **Repository** | <https://github.com/arifulhoque7/ecomdrive-order-dashboard> (private) |
 | **Live deployment** | _pending — see “Deploying” below_ |
 | **Screen recording** | _≤ 5 min walkthrough: orders → filters → detail → status change → POS sale → AI insight_ |
-| **Approximate time spent** | ~4 hours of build time (first commit-ready code to final polish), plus review passes |
+| **Approximate time spent** | ~4 hours |
 | **Demo login** | `operator@ecomdrive.test` / `password` |
 
 ### How the brief is covered
@@ -78,7 +78,14 @@ that matches the status it ended up in.
 ### The AI assistant (optional)
 
 The insight feature works with **no key configured** — it falls back to a
-deterministic, rule-based brief. To use a real model, set a provider and its key:
+deterministic, rule-based brief.
+
+To use a real model, sign in and go to **Settings → AI assistant**: choose a
+provider, paste its API key, hit **Refresh models** to load that account's
+catalogue, pick one and save. The key is stored encrypted in the database.
+
+The same thing can be seeded from `.env` instead, which is what a fresh install
+falls back to:
 
 ```dotenv
 AI_PROVIDER=claude          # claude | openai | gemini
@@ -189,10 +196,18 @@ One call covers all four things an operator wants: **summarise the activity,
 suggest next actions, detect incomplete information, and draft a support
 response.**
 
-**Three providers, one contract.** `InsightProvider` has a single `generate()`
-method; `ClaudeProvider`, `OpenAiProvider` and `GeminiProvider` each implement it
-against their own JSON-schema-constrained API. `AI_PROVIDER` picks one at
-runtime through the container — adding a fourth means writing one class.
+**Three providers, one contract.** `InsightProvider` declares `generate()` and
+`models()`; `ClaudeProvider`, `OpenAiProvider` and `GeminiProvider` each
+implement it against their own JSON-schema-constrained API. Adding a fourth
+means writing one class.
+
+**Configurable from the app, not just the .env.** *Settings → AI assistant*
+lets an operator pick the provider, paste an API key and choose a model.
+**Refresh models** calls the provider's own catalogue endpoint and turns the
+field into a dropdown of exactly what that account may use, so nobody types a
+model identifier from memory. Keys are stored encrypted and never sent back to
+the browser — the page only learns whether one exists. Saved settings win over
+`.env`, which remains the fallback for a fresh install.
 
 **It degrades rather than breaks.** No key, a timeout, a 500 or an unparseable
 body all fall through to a deterministic brief built from the order's own state
@@ -223,6 +238,7 @@ reopening it is free; a **Regenerate** button forces a fresh call.
 | `OrderStatusUpdateTest` | Legal move persists and writes an audit row with the right actor; illegal move returns 422 and changes nothing. |
 | `OrderCreateTest` | POS sale for an existing customer, walk-in customer creation, catalogue pricing overriding a tampered request, flat vs free shipping, validation, guests blocked. |
 | `GenerateOrderInsightTest` | Claude/OpenAI/Gemini responses parsed through the same contract, insight cached until refresh, provider outage and missing key both falling back. |
+| `AiSettingsTest` | Settings never leak the stored key, saving encrypts it and leaves exactly one provider active, a blank key field keeps the existing one, the saved provider is the one that runs, and model refresh handles success, no-key and outage. |
 | `CatalogueTest` | Product listing with category and sales, add/edit, duplicate SKU rejected, hidden products excluded from the POS, category CRUD, non-empty category delete refused. |
 | `DashboardTest` | Headline metrics, trend length, status split, cancelled orders never counting as revenue. |
 | `OrderStatusEnumTest` | The full transition matrix and terminal states. |

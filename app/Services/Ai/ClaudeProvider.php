@@ -20,6 +20,27 @@ class ClaudeProvider extends Provider
     }
 
     /**
+     * @return array<int, string>
+     */
+    public function models(): array
+    {
+        $response = $this->http()
+            ->withHeaders([
+                'x-api-key' => $this->key,
+                'anthropic-version' => $this->version,
+            ])
+            ->get("{$this->baseUrl}/models", ['limit' => 100]);
+
+        return Arr::map(
+            Arr::where(
+                Arr::wrap($response->json('data')),
+                fn (mixed $model) => \is_array($model) && \is_string($model['id'] ?? null),
+            ),
+            fn (array $model) => (string) $model['id'],
+        );
+    }
+
+    /**
      * @param  array<string, mixed>  $schema
      */
     protected function ask(string $system, string $prompt, array $schema): ?string

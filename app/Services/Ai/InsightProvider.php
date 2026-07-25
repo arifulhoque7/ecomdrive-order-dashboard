@@ -16,6 +16,13 @@ interface InsightProvider
     public function generate(string $system, string $prompt, array $schema): ?array;
 
     /**
+     * The models this account may use, newest-looking first.
+     *
+     * @return array<int, string>
+     */
+    public function models(): array;
+
+    /**
      * The name recorded on the generated insight.
      */
     public function name(): string;
