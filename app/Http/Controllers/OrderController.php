@@ -141,6 +141,8 @@ class OrderController extends Controller
 
         return [
             'orders_count' => $scoped()->count(),
+            'pending_orders' => $scoped()->where('status', OrderStatus::Pending)->count(),
+            'delivered_orders' => $scoped()->where('status', OrderStatus::Delivered)->count(),
             'revenue_cents' => $revenueCents,
             'avg_order_value_cents' => $earningCount === 0 ? 0 : (int) round($revenueCents / $earningCount),
             'open_orders' => $scoped()->whereIn('status', OrderStatus::open())->count(),

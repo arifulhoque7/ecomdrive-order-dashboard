@@ -19,7 +19,7 @@ test('the detail page carries the items, activity and legal next statuses', func
             ->where('order.order_number', $order->order_number)
             ->has('order.items', 3)
             ->has('order.activities', $order->activities()->count())
-            ->where('order.allowed_transitions.0.value', 'processing')
+            ->where('order.allowed_transitions.0.value', 'confirmed')
             ->where('order.allowed_transitions.1.value', 'cancelled')
             ->where('order.totals.total_cents', $order->total_cents)
         );

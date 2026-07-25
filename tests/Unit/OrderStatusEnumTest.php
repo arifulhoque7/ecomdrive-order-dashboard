@@ -5,9 +5,13 @@ use App\Enums\OrderStatus;
 test('an order can only move along its fulfilment path', function (OrderStatus $from, OrderStatus $to, bool $allowed) {
     expect($from->canTransitionTo($to))->toBe($allowed);
 })->with([
-    'pending to processing' => [OrderStatus::Pending, OrderStatus::Processing, true],
+    'pending to confirmed' => [OrderStatus::Pending, OrderStatus::Confirmed, true],
     'pending to cancelled' => [OrderStatus::Pending, OrderStatus::Cancelled, true],
+    'pending skipping confirmation' => [OrderStatus::Pending, OrderStatus::Processing, false],
     'pending skipping to shipped' => [OrderStatus::Pending, OrderStatus::Shipped, false],
+    'confirmed to processing' => [OrderStatus::Confirmed, OrderStatus::Processing, true],
+    'confirmed to cancelled' => [OrderStatus::Confirmed, OrderStatus::Cancelled, true],
+    'confirmed back to pending' => [OrderStatus::Confirmed, OrderStatus::Pending, false],
     'processing to shipped' => [OrderStatus::Processing, OrderStatus::Shipped, true],
     'shipped to delivered' => [OrderStatus::Shipped, OrderStatus::Delivered, true],
     'delivered back to processing' => [OrderStatus::Delivered, OrderStatus::Processing, false],
@@ -24,10 +28,12 @@ test('cancelled and refunded are terminal', function (OrderStatus $status) {
 test('only unfinished orders count as open', function () {
     expect(OrderStatus::open())->toBe([
         OrderStatus::Pending,
+        OrderStatus::Confirmed,
         OrderStatus::Processing,
         OrderStatus::Shipped,
     ]);
 
     expect(OrderStatus::Delivered->isOpen())->toBeFalse();
     expect(OrderStatus::Processing->isOpen())->toBeTrue();
+    expect(OrderStatus::Confirmed->isOpen())->toBeTrue();
 });

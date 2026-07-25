@@ -122,35 +122,47 @@ class OrderActivityFactory extends Factory
     }
 
     /**
-     * The status hops an order took to reach its current status.
+     * The route an order walks when nothing goes wrong. Every status but the
+     * two exits is reached by following this far enough.
+     *
+     * @var array<int, OrderStatus>
+     */
+    protected const array FULFILMENT_PATH = [
+        OrderStatus::Pending,
+        OrderStatus::Confirmed,
+        OrderStatus::Processing,
+        OrderStatus::Shipped,
+        OrderStatus::Delivered,
+    ];
+
+    /**
+     * The status hops an order took to reach its current status, so a seeded
+     * history always matches the transitions the enum would have allowed.
      *
      * @return array<int, array{0: OrderStatus, 1: OrderStatus}>
      */
     protected static function hopsTo(OrderStatus $status): array
     {
-        return match ($status) {
-            OrderStatus::Pending => [],
-            OrderStatus::Processing => [
-                [OrderStatus::Pending, OrderStatus::Processing],
-            ],
-            OrderStatus::Shipped => [
-                [OrderStatus::Pending, OrderStatus::Processing],
-                [OrderStatus::Processing, OrderStatus::Shipped],
-            ],
-            OrderStatus::Delivered => [
-                [OrderStatus::Pending, OrderStatus::Processing],
-                [OrderStatus::Processing, OrderStatus::Shipped],
-                [OrderStatus::Shipped, OrderStatus::Delivered],
-            ],
-            OrderStatus::Cancelled => [
-                [OrderStatus::Pending, OrderStatus::Cancelled],
-            ],
-            OrderStatus::Refunded => [
-                [OrderStatus::Pending, OrderStatus::Processing],
-                [OrderStatus::Processing, OrderStatus::Shipped],
-                [OrderStatus::Shipped, OrderStatus::Refunded],
-            ],
+        $shipped = array_slice(self::FULFILMENT_PATH, 0, 4);
+
+        $walked = match ($status) {
+            // Cancelled leaves early; a refund only happens once goods shipped.
+            OrderStatus::Cancelled => [OrderStatus::Pending, OrderStatus::Cancelled],
+            OrderStatus::Refunded => [...$shipped, OrderStatus::Refunded],
+            default => array_slice(
+                self::FULFILMENT_PATH,
+                0,
+                (int) array_search($status, self::FULFILMENT_PATH, true) + 1,
+            ),
         };
+
+        $hops = [];
+
+        for ($step = 1; $step < count($walked); $step++) {
+            $hops[] = [$walked[$step - 1], $walked[$step]];
+        }
+
+        return $hops;
     }
 
     protected static function actorId(): ?int

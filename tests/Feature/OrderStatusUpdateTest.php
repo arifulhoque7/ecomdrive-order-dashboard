@@ -26,18 +26,27 @@ test('a legal transition is applied and leaves an audit trail', function () {
     $order = Order::factory()->pending()->create();
     $before = $order->activities()->count();
 
-    $this->patch(route('orders.status.update', $order), ['status' => 'processing'])
+    $this->patch(route('orders.status.update', $order), ['status' => 'confirmed'])
         ->assertRedirect(route('orders.show', $order));
 
-    expect($order->refresh()->status)->toBe(OrderStatus::Processing);
+    expect($order->refresh()->status)->toBe(OrderStatus::Confirmed);
 
     $activity = OrderActivity::query()->latest('id')->first();
 
     expect($order->activities()->count())->toBe($before + 1)
         ->and($activity->type)->toBe(ActivityType::StatusChanged)
         ->and($activity->from_status)->toBe(OrderStatus::Pending)
-        ->and($activity->to_status)->toBe(OrderStatus::Processing)
+        ->and($activity->to_status)->toBe(OrderStatus::Confirmed)
         ->and($activity->user_id)->toBe($this->operator->id);
+});
+
+test('an order cannot skip confirmation on its way to processing', function () {
+    $order = Order::factory()->pending()->create();
+
+    $this->patch(route('orders.status.update', $order), ['status' => 'processing'])
+        ->assertSessionHasErrors('status');
+
+    expect($order->refresh()->status)->toBe(OrderStatus::Pending);
 });
 
 test('an illegal transition is rejected and changes nothing', function () {

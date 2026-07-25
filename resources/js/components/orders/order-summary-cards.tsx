@@ -1,4 +1,9 @@
-import { CircleDollarSign, Clock3, Receipt, ShoppingBag } from 'lucide-react';
+import {
+    CircleDollarSign,
+    Clock3,
+    PackageCheck,
+    ShoppingBag,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { formatMoney } from '@/components/orders/money';
 import type { OrderSummary } from '@/types/orders';
@@ -43,22 +48,22 @@ export function OrderSummaryCards({ summary }: { summary: OrderSummary }) {
                 meta="Across search and date filters"
             />
             <SummaryCard
-                icon={CircleDollarSign}
-                label="Revenue"
-                value={formatMoney(summary.revenue_cents)}
-                meta="Cancelled and refunded excluded"
-            />
-            <SummaryCard
-                icon={Receipt}
-                label="Avg order value"
-                value={formatMoney(summary.avg_order_value_cents)}
-                meta="Across revenue-earning orders"
-            />
-            <SummaryCard
                 icon={Clock3}
-                label="Open orders"
-                value={summary.open_orders.toLocaleString()}
-                meta="Pending, processing or shipped"
+                label="Pending orders"
+                value={summary.pending_orders.toLocaleString()}
+                meta={`${summary.open_orders.toLocaleString()} open in total`}
+            />
+            <SummaryCard
+                icon={PackageCheck}
+                label="Delivered orders"
+                value={summary.delivered_orders.toLocaleString()}
+                meta="Fulfilled and closed"
+            />
+            <SummaryCard
+                icon={CircleDollarSign}
+                label="Total revenue"
+                value={formatMoney(summary.revenue_cents)}
+                meta={`${formatMoney(summary.avg_order_value_cents)} average order`}
             />
         </dl>
     );

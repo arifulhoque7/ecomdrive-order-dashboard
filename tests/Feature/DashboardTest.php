@@ -29,7 +29,7 @@ test('the dashboard reports today, the open queue and the order book', function 
             ->where('headline.open_orders', 2)
             ->where('headline.awaiting_payment', 2)
             ->has('revenueTrend', 14)
-            ->has('statusBreakdown', 6)
+            ->has('statusBreakdown', 7)
             ->has('needsAttention', 2)
             ->has('recentOrders', 4)
             ->has('topCustomers')

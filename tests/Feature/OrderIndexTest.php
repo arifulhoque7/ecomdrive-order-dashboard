@@ -21,7 +21,9 @@ test('search matches an order number or the customer behind it', function () {
         ->for(Customer::factory()->create(['name' => 'Marguerite Doyle']))
         ->create(['order_number' => 'ORD-WANTED']);
 
-    Order::factory()->create(['order_number' => 'ORD-OTHER']);
+    Order::factory()
+        ->for(Customer::factory()->create(['name' => 'Sabine Ferrer']))
+        ->create(['order_number' => 'ORD-OTHER']);
 
     $this->get(route('orders.index', ['q' => 'ORD-WANTED']))
         ->assertInertia(fn (AssertableInertia $page) => $page
@@ -42,7 +44,9 @@ test('search ignores case regardless of the database driver', function () {
         ->for(Customer::factory()->create(['name' => 'Marguerite Doyle']))
         ->create(['order_number' => 'ORD-WANTED']);
 
-    Order::factory()->create(['order_number' => 'ORD-OTHER']);
+    Order::factory()
+        ->for(Customer::factory()->create(['name' => 'Sabine Ferrer']))
+        ->create(['order_number' => 'ORD-OTHER']);
 
     $this->get(route('orders.index', ['q' => 'ord-wanted']))
         ->assertInertia(fn (AssertableInertia $page) => $page
@@ -100,6 +104,8 @@ test('the summary cards hold still when the status tab changes', function () {
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->has('orders.data', 3)
             ->where('summary.orders_count', $all['orders_count'])
+            ->where('summary.pending_orders', $all['pending_orders'])
+            ->where('summary.delivered_orders', $all['delivered_orders'])
             ->where('summary.revenue_cents', $all['revenue_cents'])
             ->where('summary.open_orders', $all['open_orders'])
         );
@@ -115,15 +121,17 @@ test('the summary cards still follow the search and date filters', function () {
 
 test('the summary cards describe the filtered set and exclude lost revenue', function () {
     Order::factory()->count(2)->delivered()->create();
+    Order::factory()->count(3)->pending()->create();
     Order::factory()->status(OrderStatus::Cancelled)->create();
 
     $delivered = Order::query()->where('status', OrderStatus::Delivered)->get();
 
     $this->get(route('orders.index'))
         ->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('summary.orders_count', 3)
-            ->where('summary.revenue_cents', (int) $delivered->sum('total_cents'))
-            ->where('summary.avg_order_value_cents', (int) round($delivered->sum('total_cents') / 2))
-            ->where('summary.open_orders', 0)
+            ->where('summary.orders_count', 6)
+            ->where('summary.pending_orders', 3)
+            ->where('summary.delivered_orders', 2)
+            ->where('summary.revenue_cents', (int) ($delivered->sum('total_cents') + Order::query()->where('status', OrderStatus::Pending)->sum('total_cents')))
+            ->where('summary.open_orders', 3)
         );
 });

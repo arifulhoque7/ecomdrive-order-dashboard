@@ -126,7 +126,8 @@ class GenerateOrderInsight
         ])->filter()->values();
 
         $actions = match ($order->status) {
-            OrderStatus::Pending => ['Confirm the payment has cleared.', 'Move the order to processing once stock is reserved.'],
+            OrderStatus::Pending => ['Confirm the payment has cleared.', 'Confirm the order once the customer details check out.'],
+            OrderStatus::Confirmed => ['Reserve stock for every line item.', 'Move the order to processing so it can be picked.'],
             OrderStatus::Processing => ['Pick and pack the items.', 'Book the shipment and share tracking with the customer.'],
             OrderStatus::Shipped => ['Monitor the carrier tracking.', 'Mark as delivered once the carrier confirms.'],
             OrderStatus::Delivered => ['Invite the customer to review their purchase.', 'Close the ticket unless a refund is requested.'],

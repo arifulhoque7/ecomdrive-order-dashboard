@@ -5,6 +5,7 @@ namespace App\Enums;
 enum OrderStatus: string
 {
     case Pending = 'pending';
+    case Confirmed = 'confirmed';
     case Processing = 'processing';
     case Shipped = 'shipped';
     case Delivered = 'delivered';
@@ -15,6 +16,7 @@ enum OrderStatus: string
     {
         return match ($this) {
             self::Pending => 'Pending',
+            self::Confirmed => 'Confirmed',
             self::Processing => 'Processing',
             self::Shipped => 'Shipped',
             self::Delivered => 'Delivered',
@@ -30,6 +32,7 @@ enum OrderStatus: string
     {
         return match ($this) {
             self::Pending => 'bg-neutral-100 text-neutral-700 dark:bg-neutral-500/15 dark:text-neutral-300',
+            self::Confirmed => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/15 dark:text-indigo-300',
             self::Processing => 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
             self::Shipped => 'bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300',
             self::Delivered => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300',
@@ -46,7 +49,8 @@ enum OrderStatus: string
     public function transitions(): array
     {
         return match ($this) {
-            self::Pending => [self::Processing, self::Cancelled],
+            self::Pending => [self::Confirmed, self::Cancelled],
+            self::Confirmed => [self::Processing, self::Cancelled],
             self::Processing => [self::Shipped, self::Cancelled],
             self::Shipped => [self::Delivered, self::Refunded],
             self::Delivered => [self::Refunded],
@@ -64,7 +68,7 @@ enum OrderStatus: string
      */
     public function isOpen(): bool
     {
-        return in_array($this, [self::Pending, self::Processing, self::Shipped], true);
+        return in_array($this, self::open(), true);
     }
 
     /**
@@ -72,6 +76,6 @@ enum OrderStatus: string
      */
     public static function open(): array
     {
-        return [self::Pending, self::Processing, self::Shipped];
+        return [self::Pending, self::Confirmed, self::Processing, self::Shipped];
     }
 }

@@ -24,11 +24,13 @@ Built with Laravel 13, Inertia v3, React 19 and MySQL.
 | View a list of orders | `/orders` — paginated table, sortable columns |
 | Search and filter by customer, status and date | Search matches order number, customer name and email; status tabs with live counts; date-range filter; all of it in the URL |
 | Open an order: details, items, totals, activity history | `/orders/{id}` — line items with photos, totals breakdown, customer and shipping cards, full timeline |
-| Update the order status | Status control offering only legal transitions; illegal moves rejected with a 422 and an audit row written for every change |
-| Summary cards with key metrics | Orders index (filter-aware) and a dedicated dashboard with revenue trend, order-book split, oldest open orders and top customers |
+| Update the order status | Pending, Confirmed, Processing, Shipped, Delivered, Cancelled (plus Refunded). The control offers only legal transitions; illegal moves are rejected with a 422 and an audit row is written for every change |
+| Summary cards: total orders, pending, delivered, revenue | Orders index, filter-aware. A dedicated dashboard adds revenue trend, order-book split, oldest open orders and top customers |
 | AI-assisted feature | `POST /orders/{id}/insight` — one call returns an activity summary, next actions, missing-information flags and a draft customer reply |
-| Persistent storage | MySQL, with migrations, factories and seeders |
-| At least two meaningful automated tests | 85 Pest tests (see the Tests section) |
+| Persistent storage | MySQL locally, Postgres in the deployment; migrations, factories and seeders |
+| Validation and error handling | Form Requests on every write, illegal transitions rejected server-side, AI provider outages fall back to a rule-based brief |
+| Responsive interface | Cards, tables and the POS reflow from mobile to desktop |
+| At least two meaningful automated tests | 103 Pest tests (see the Tests section) |
 
 ---
 
@@ -72,7 +74,7 @@ Open <http://localhost:8000> and sign in:
 
 The seed creates 10 categories, 24 products (photography from
 [Shopify Burst](https://burst.shopify.com), free for commercial use), 32
-customers, ~124 orders spread over 90 days, and an activity trail on every order
+customers, ~138 orders spread over 90 days, and an activity trail on every order
 that matches the status it ended up in.
 
 ### The AI assistant (optional)
@@ -97,7 +99,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 ### Checks
 
 ```bash
-php artisan test           # 85 tests
+php artisan test           # 103 tests
 vendor/bin/pint            # PHP formatting
 composer types:check       # Larastan
 npm run lint:check && npm run types:check && npm run format:check
@@ -134,9 +136,11 @@ npm run lint:check && npm run types:check && npm run format:check
   and any future edit path all call the same action, so an order's totals can
   never contradict its items.
 - **Status transitions live on the enum.** `OrderStatus` owns the matrix
-  (`Pending → Processing → Shipped → Delivered`, with cancel/refund branches and
-  two terminal states), its own label, and its badge colours. The Form Request
-  rejects an illegal move with a 422; the UI only ever renders the legal ones.
+  (`Pending → Confirmed → Processing → Shipped → Delivered`, with cancel/refund
+  branches and two terminal states), its own label, and its badge colours. The
+  Form Request rejects an illegal move with a 422; the UI only ever renders the
+  legal ones. `Refunded` is an addition to the brief's list — a delivered order
+  that comes back needs somewhere to go that is not `Cancelled`.
 - **Line items snapshot the product** (name, SKU, price, image) at the moment of
   sale, so editing or deleting a catalogue product never rewrites history.
 - **Prices always come from the catalogue, never the request** — a tampered
@@ -229,7 +233,7 @@ reopening it is free; a **Regenerate** button forces a fresh call.
 
 ## Tests
 
-85 Pest tests, feature-first:
+103 Pest tests, feature-first:
 
 | File | Covers |
 | --- | --- |

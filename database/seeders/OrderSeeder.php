@@ -20,6 +20,7 @@ class OrderSeeder extends Seeder
         'delivered' => 42,
         'shipped' => 20,
         'processing' => 22,
+        'confirmed' => 14,
         'pending' => 16,
         'cancelled' => 12,
         'refunded' => 8,

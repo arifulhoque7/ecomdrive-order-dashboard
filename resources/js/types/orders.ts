@@ -97,6 +97,8 @@ export type OrderFilters = {
 
 export type OrderSummary = {
     orders_count: number;
+    pending_orders: number;
+    delivered_orders: number;
     revenue_cents: number;
     avg_order_value_cents: number;
     open_orders: number;
