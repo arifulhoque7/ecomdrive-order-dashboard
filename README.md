@@ -11,8 +11,8 @@ Built with Laravel 13, Inertia v3, React 19 and MySQL.
 
 | | |
 | --- | --- |
-| **Repository** | <https://github.com/arifulhoque7/ecomdrive-order-dashboard> (private) |
-| **Live deployment** | _pending — see “Deploying” below_ |
+| **Repository** | <https://github.com/arifulhoque7/ecomdrive-order-dashboard> |
+| **Live deployment** | <https://ecomdrive-order-dashboard.onrender.com> — on Render's free tier, so the first request after 15 minutes idle takes about a minute to wake |
 | **Screen recording** | _≤ 5 min walkthrough: orders → filters → detail → status change → POS sale → AI insight_ |
 | **Approximate time spent** | ~4 hours |
 | **Demo login** | `operator@ecomdrive.test` / `password` |
