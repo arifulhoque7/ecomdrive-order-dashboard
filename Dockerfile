@@ -55,7 +55,12 @@ ENV APP_ENV=production \
 COPY --from=build /app /app
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint
 
-RUN chmod +x /usr/local/bin/entrypoint \
+# The shipped binary carries cap_net_bind_service so it can bind port 80. Hosts
+# that drop that capability from the container refuse to exec the file at all
+# ("Operation not permitted"), and we bind the port the platform hands us
+# anyway, so the capability is dead weight.
+RUN setcap -r /usr/local/bin/frankenphp \
+    && chmod +x /usr/local/bin/entrypoint \
     && chmod -R ug+w storage bootstrap/cache
 
 ENTRYPOINT ["entrypoint"]
