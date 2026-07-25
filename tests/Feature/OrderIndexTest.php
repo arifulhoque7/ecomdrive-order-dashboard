@@ -37,6 +37,26 @@ test('search matches an order number or the customer behind it', function () {
         );
 });
 
+test('search ignores case regardless of the database driver', function () {
+    Order::factory()
+        ->for(Customer::factory()->create(['name' => 'Marguerite Doyle']))
+        ->create(['order_number' => 'ORD-WANTED']);
+
+    Order::factory()->create(['order_number' => 'ORD-OTHER']);
+
+    $this->get(route('orders.index', ['q' => 'ord-wanted']))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('orders.data', 1)
+            ->where('orders.data.0.order_number', 'ORD-WANTED')
+        );
+
+    $this->get(route('orders.index', ['q' => 'MARGUERITE']))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('orders.data', 1)
+            ->where('orders.data.0.order_number', 'ORD-WANTED')
+        );
+});
+
 test('the status tab narrows the list and the counts stay filter aware', function () {
     Order::factory()->count(3)->pending()->create();
     Order::factory()->count(2)->delivered()->create();

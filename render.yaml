@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: ecomdrive-order-dashboard
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /up
+    envVars:
+      # Generate with `php artisan key:generate --show` and paste it into the
+      # Render dashboard on first deploy.
+      - key: APP_KEY
+        sync: false
+      - key: APP_NAME
+        value: EcomDrive
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: warning
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: ecomdrive-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: MAIL_MAILER
+        value: log
+      # Optional: set a provider key here, or from the in-app AI settings screen.
+      - key: AI_PROVIDER
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false
+
+databases:
+  - name: ecomdrive-db
+    plan: free
+    region: oregon
+    databaseName: ecomdrive
+    user: ecomdrive

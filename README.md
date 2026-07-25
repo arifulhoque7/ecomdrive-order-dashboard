@@ -247,14 +247,37 @@ reopening it is free; a **Regenerate** button forces a fresh call.
 
 ## Deploying
 
-The app is a standard Laravel + Vite deployment; it has been verified against
-Laravel Cloud and works the same on Forge or any PHP host:
+`render.yaml` is a Render blueprint that provisions the web service and a
+Postgres database, so deploying is:
 
-1. Provision MySQL and set `DB_*`, plus `APP_KEY` (`php artisan key:generate`).
-2. Build step: `composer install --no-dev -o && npm ci && npm run build`.
-3. Release step: `php artisan migrate --seed --force`.
-4. Optional: set `AI_PROVIDER` and the matching API key. Leave them unset and the
-   insight feature still works via its deterministic fallback.
+1. **New → Blueprint** on Render, point it at this repository, apply.
+2. Set `APP_KEY` when prompted — generate one with `php artisan key:generate --show`.
+3. Optionally set `OPENAI_API_KEY` (or switch provider in-app under
+   **Settings → AI assistant**). Leave it unset and insights still work through
+   the deterministic fallback.
+
+The first boot migrates and seeds itself; the seeder is a no-op once the
+database has data, so redeploys never duplicate the demo orders.
+
+`Dockerfile` builds the whole thing in one image — FrankenPHP serves PHP 8.4 and
+static assets from a single process. The build stage carries both Composer and
+Node because Wayfinder boots Artisan to generate its TypeScript route helpers
+during `vite build`. Dev dependencies stay in the image on purpose: the demo
+seeds itself through model factories, which need Faker.
+
+Nothing is Render-specific beyond `render.yaml` — the image runs on any Docker
+host, and the app runs equally well on Forge, Laravel Cloud, or a plain PHP host
+with `composer install -o && npm ci && npm run build` as the build step and
+`php artisan migrate --seed --force` as the release step.
+
+**Local and hosted use different databases** — MySQL locally, Postgres on Render.
+Two places had to become driver-agnostic: the revenue chart buckets orders in PHP
+instead of calling MySQL's `DATE()`, and order search uses `whereLike`, which
+stays case-insensitive on Postgres where a bare `like` would not.
+
+Two caveats of the free tier worth knowing before clicking the link: the service
+sleeps after 15 minutes idle, so the first request takes about a minute, and
+Render's free Postgres expires 30 days after creation.
 
 ---
 

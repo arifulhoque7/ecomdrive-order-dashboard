@@ -59,6 +59,9 @@ class DashboardController extends Controller
     /**
      * Daily earned revenue, with quiet days included so the chart keeps its shape.
      *
+     * A fortnight of orders is small enough to bucket in PHP, which keeps the
+     * query free of date functions that differ between MySQL and Postgres.
+     *
      * @return array<int, array{day: string, label: string, revenue_cents: int}>
      */
     protected function revenueTrend(): array
@@ -67,9 +70,9 @@ class DashboardController extends Controller
 
         $earned = $this->earning()
             ->where('placed_at', '>=', $from)
-            ->selectRaw('DATE(placed_at) as day, SUM(total_cents) as revenue_cents')
-            ->groupBy('day')
-            ->pluck('revenue_cents', 'day');
+            ->get(['placed_at', 'total_cents'])
+            ->groupBy(fn (Order $order): string => $order->placed_at->toDateString())
+            ->map(fn (Collection $orders): int => (int) $orders->sum('total_cents'));
 
         return Collection::times(self::TREND_DAYS, function (int $offset) use ($from, $earned): array {
             $day = $from->copy()->addDays($offset - 1);

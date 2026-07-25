@@ -78,7 +78,9 @@ class Order extends Model
     }
 
     /**
-     * Match an order number, or the customer's name or email.
+     * Match an order number, or the customer's name or email. `whereLike` keeps
+     * the match case-insensitive on every driver — a bare `like` is case-
+     * sensitive on Postgres, where the deployed app runs.
      *
      * @param  Builder<self>  $query
      */
@@ -89,10 +91,10 @@ class Order extends Model
             filled($term),
             fn (Builder $query) => $query
                 ->where(fn (Builder $query) => $query
-                    ->where('order_number', 'like', "%{$term}%")
+                    ->whereLike('order_number', "%{$term}%")
                     ->orWhereHas('customer', fn (Builder $customer) => $customer
-                        ->where('name', 'like', "%{$term}%")
-                        ->orWhere('email', 'like', "%{$term}%")
+                        ->whereLike('name', "%{$term}%")
+                        ->orWhereLike('email', "%{$term}%")
                     )
                 )
         );

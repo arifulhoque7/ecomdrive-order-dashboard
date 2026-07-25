@@ -36,6 +36,28 @@ test('the dashboard reports today, the open queue and the order book', function 
         );
 });
 
+test('the revenue trend buckets orders by the day they were placed', function () {
+    $this->actingAs(User::factory()->create());
+
+    $today = now()->startOfDay();
+
+    $morning = Order::factory()->delivered()->create(['placed_at' => $today->addHours(2)]);
+    $evening = Order::factory()->delivered()->create(['placed_at' => $today->addHours(20)]);
+    $earlier = Order::factory()->delivered()->create(['placed_at' => $today->subDays(2)]);
+
+    Order::factory()->status(OrderStatus::Refunded)->create(['placed_at' => $today->addHours(9)]);
+
+    $this->get(route('dashboard'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            // Both of today's earning orders land in one bucket, whatever the
+            // hour; the refunded one never counts.
+            ->where('revenueTrend.13.day', $today->toDateString())
+            ->where('revenueTrend.13.revenue_cents', $morning->total_cents + $evening->total_cents)
+            ->where('revenueTrend.12.revenue_cents', 0)
+            ->where('revenueTrend.11.revenue_cents', $earlier->total_cents)
+        );
+});
+
 test('cancelled orders never count as revenue on the dashboard', function () {
     $this->actingAs(User::factory()->create());
 

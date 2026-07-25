@@ -12,9 +12,16 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     *
+     * Deploys run this on every boot, so an already-seeded database is left
+     * alone rather than collecting a second set of demo orders.
      */
     public function run(): void
     {
+        if (User::query()->exists()) {
+            return;
+        }
+
         User::factory()->create([
             'name' => 'Ops Operator',
             'email' => 'operator@ecomdrive.test',
