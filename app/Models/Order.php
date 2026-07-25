@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use Carbon\CarbonInterface;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\CarbonInterface;
 
 /**
  * @property int $id
@@ -29,8 +30,8 @@ use Carbon\CarbonInterface;
  * @property array<string, mixed>|null $ai_insight
  * @property CarbonInterface|null $ai_insight_generated_at
  * @property-read Customer $customer
- * @property-read \Illuminate\Database\Eloquent\Collection<int, OrderItem> $items
- * @property-read \Illuminate\Database\Eloquent\Collection<int, OrderActivity> $activities
+ * @property-read Collection<int, OrderItem> $items
+ * @property-read Collection<int, OrderActivity> $activities
  */
 class Order extends Model
 {

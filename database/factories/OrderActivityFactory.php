@@ -7,8 +7,8 @@ use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\OrderActivity;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends Factory<OrderActivity>

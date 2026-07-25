@@ -24,7 +24,7 @@ class OrderStatusController extends Controller
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => __("Order :number is now :status.", [
+            'message' => __('Order :number is now :status.', [
                 'number' => $order->order_number,
                 'status' => $status->label(),
             ]),

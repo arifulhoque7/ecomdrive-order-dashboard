@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,7 @@ test('the detail page carries the items, activity and legal next statuses', func
 });
 
 test('a terminal order offers no further transitions', function () {
-    $order = Order::factory()->status(App\Enums\OrderStatus::Cancelled)->create();
+    $order = Order::factory()->status(OrderStatus::Cancelled)->create();
 
     $this->get(route('orders.show', $order))
         ->assertInertia(fn (AssertableInertia $page) => $page->has('order.allowed_transitions', 0));
