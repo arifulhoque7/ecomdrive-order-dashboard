@@ -11,7 +11,7 @@ Built with Laravel 13, Inertia v3, React 19 and MySQL.
 
 | | |
 | --- | --- |
-| **Repository** | _(this repo)_ |
+| **Repository** | <https://github.com/arifulhoque7/ecomdrive-order-dashboard> (private) |
 | **Live deployment** | _pending — see “Deploying” below_ |
 | **Screen recording** | _≤ 5 min walkthrough: orders → filters → detail → status change → POS sale → AI insight_ |
 | **Approximate time spent** | ~4 hours of build time (first commit-ready code to final polish), plus review passes |
